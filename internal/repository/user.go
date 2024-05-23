@@ -2,8 +2,11 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/nozzlium/belimang/internal/constant"
 	"github.com/nozzlium/belimang/internal/model"
 )
 
@@ -48,8 +51,8 @@ func (r *UserRepository) CreateAdmin(
 
 	queryInsertUsername := `
     insert into
-    usernames (
-      user_id,
+    admin_usernames (
+      admin_id,
       username
     ) values (
       $1, $2
@@ -63,6 +66,12 @@ func (r *UserRepository) CreateAdmin(
 
 	batchRes := tx.SendBatch(ctx, batch)
 	if err := batchRes.Close(); err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == "23505" {
+				return user, constant.ErrConflict
+			}
+		}
 		return user, err
 	}
 
@@ -104,7 +113,7 @@ func (r *UserRepository) CreateUser(
 
 	queryInsertUsername := `
     insert into
-    usernames (
+    user_usernames (
       user_id,
       username
     ) values (
@@ -119,6 +128,12 @@ func (r *UserRepository) CreateUser(
 
 	batchRes := tx.SendBatch(ctx, batch)
 	if err := batchRes.Close(); err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == "23505" {
+				return user, constant.ErrConflict
+			}
+		}
 		return user, err
 	}
 
@@ -141,7 +156,7 @@ func (r *UserRepository) FindAdminByUsername(
       a.password
     from 
       admins a 
-      inner join usernames u on u.user_id = a.id 
+      inner join admin_usernames u on u.admin_id = a.id 
     where u.username = $1
   `
 
@@ -151,6 +166,12 @@ func (r *UserRepository) FindAdminByUsername(
 		user.Username,
 	).Scan(&user.ID, &user.Username, &user.Email, &user.Password)
 	if err != nil {
+		if errors.Is(
+			err,
+			pgx.ErrNoRows,
+		) {
+			return user, constant.ErrNotFound
+		}
 		return user, err
 	}
 
@@ -169,7 +190,7 @@ func (r *UserRepository) FindUserByUsername(
       u.password
     from 
       users u 
-      inner join usernames un on un.user_id = u.id 
+      inner join user_usernames un on un.user_id = u.id 
     where un.username = $1
   `
 
@@ -179,8 +200,64 @@ func (r *UserRepository) FindUserByUsername(
 		user.Username,
 	).Scan(&user.ID, &user.Username, &user.Email, &user.Password)
 	if err != nil {
+		if errors.Is(
+			err,
+			pgx.ErrNoRows,
+		) {
+			return user, constant.ErrNotFound
+		}
 		return user, err
 	}
 
 	return user, nil
+}
+
+func (r *UserRepository) FindAdminUsername(
+	ctx context.Context,
+	username string,
+) (string, error) {
+	query := `
+    select username
+    from admin_usernames
+    where username = $1
+  `
+	var savedUsername string
+	err := r.db.QueryRow(ctx, query, username).
+		Scan(&savedUsername)
+	if err != nil {
+		if errors.Is(
+			err,
+			pgx.ErrNoRows,
+		) {
+			return "", constant.ErrNotFound
+		}
+		return "", err
+	}
+
+	return savedUsername, nil
+}
+
+func (r *UserRepository) FindUserUsername(
+	ctx context.Context,
+	username string,
+) (string, error) {
+	query := `
+    select username
+    from user_usernames
+    where username = $1
+  `
+	var savedUsername string
+	err := r.db.QueryRow(ctx, query, username).
+		Scan(&savedUsername)
+	if err != nil {
+		if errors.Is(
+			err,
+			pgx.ErrNoRows,
+		) {
+			return "", constant.ErrNotFound
+		}
+		return "", err
+	}
+
+	return savedUsername, nil
 }

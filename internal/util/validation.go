@@ -3,7 +3,7 @@ package util
 import (
 	"regexp"
 
-	constant "github.com/nozzlium/belimang/internal/constants"
+	"github.com/nozzlium/belimang/internal/constant"
 )
 
 func ValidateEmailAddress(
