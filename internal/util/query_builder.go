@@ -65,6 +65,7 @@ func BuildQueryStringAndParamsWithoutLimit(
 	baseQuery *bytes.Buffer,
 	whereBuilder func() ([]string, []interface{}),
 	orderByBuilder func() []string,
+	groupBy ...string,
 ) (string, []interface{}) {
 	where, params := whereBuilder()
 	for i, clause := range where {
@@ -75,21 +76,33 @@ func BuildQueryStringAndParamsWithoutLimit(
 		)
 	}
 
-	orderBy := orderByBuilder()
-	if len(orderBy) > 0 {
-		baseQuery.WriteString(
-			" order by ",
-		)
-		for i, clause := range orderBy {
-			if i > 0 {
-				baseQuery.WriteString(
-					", ",
+	if lenGroup := len(groupBy); lenGroup <= 1 {
+		for _, group := range groupBy {
+			fmt.Fprintf(
+				baseQuery,
+				" group by %s",
+				group,
+			)
+		}
+	}
+
+	if orderByBuilder != nil {
+		orderBy := orderByBuilder()
+		if len(orderBy) > 0 {
+			baseQuery.WriteString(
+				" order by ",
+			)
+			for i, clause := range orderBy {
+				if i > 0 {
+					baseQuery.WriteString(
+						", ",
+					)
+				}
+				fmt.Fprint(
+					baseQuery,
+					clause,
 				)
 			}
-			fmt.Fprint(
-				baseQuery,
-				clause,
-			)
 		}
 	}
 
