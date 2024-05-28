@@ -10,5 +10,5 @@ CREATE TABLE IF NOT EXISTS "merchants" (
   longitude float NOT NULL,
   created_at timestamp NOT NULL,
   PRIMARY KEY ("id"),
-  FOREIGN KEY ("user_id") REFERENCES "admins" ("id") ON DELETE CASCADE
+  FOREIGN KEY ("user_id") REFERENCES "admin_details" ("user_id") ON DELETE CASCADE
 );

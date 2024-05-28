@@ -35,27 +35,6 @@ func (s *UserService) RegisterAdmin(
 	ctx context.Context,
 	user model.User,
 ) (string, error) {
-	foundUsername, err := s.userRepository.FindUserUsername(
-		ctx,
-		user.Username,
-	)
-	if err != nil {
-		if !errors.Is(
-			err,
-			constant.ErrNotFound,
-		) {
-			return "", err
-		}
-	}
-	log.Println(
-		foundUsername,
-		user.Username,
-	)
-
-	if foundUsername == user.Username {
-		return "", constant.ErrConflict
-	}
-
 	userId, err := uuid.NewV7()
 	if err != nil {
 		return "", err
@@ -132,23 +111,6 @@ func (s *UserService) RegisterUser(
 	ctx context.Context,
 	user model.User,
 ) (string, error) {
-	foundUsername, err := s.userRepository.FindAdminUsername(
-		ctx,
-		user.Username,
-	)
-	if err != nil {
-		if !errors.Is(
-			err,
-			constant.ErrNotFound,
-		) {
-			return "", err
-		}
-	}
-
-	if foundUsername == user.Username {
-		return "", constant.ErrConflict
-	}
-
 	userId, err := uuid.NewV7()
 	if err != nil {
 		return "", err

@@ -1,31 +1,24 @@
-CREATE TABLE IF NOT EXISTS "admins" (
-  "id" uuid NOT NULL,
-  "email" varchar(255) NOT NULL,
-  "password" varchar(100) NOT NULL,
-  PRIMARY KEY ("id"),
-  UNIQUE ("email")
-);
-
 CREATE TABLE IF NOT EXISTS "users" (
-  "id" uuid NOT NULL,
-  "email" varchar(255) NOT NULL,
-  "password" varchar(100) NOT NULL,
-  PRIMARY KEY ("id"),
-  UNIQUE ("email")
-);
-
-CREATE TABLE IF NOT EXISTS "admin_usernames" (
-  "admin_id" uuid NOT NULL,
-  "username" varchar(30) NOT NULL,
-  PRIMARY KEY ("admin_id",  "username"),
-  FOREIGN KEY ("admin_id") REFERENCES "admins" ("id") ON DELETE CASCADE,
-  UNIQUE ("username")
-);
-
-CREATE TABLE IF NOT EXISTS "user_usernames" (
-  "user_id" UUID NOT NULL,
+  "id" UUID NOT NULL,
   "username" VARCHAR(30) NOT NULL,
-  PRIMARY KEY ("user_id", "username"), 
-  FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE,
+  PRIMARY KEY ("id"), 
   UNIQUE ("username")
+);
+
+CREATE TABLE IF NOT EXISTS "admin_details" (
+  "user_id" uuid not null,
+  "email" varchar(255) not null,
+  "password" varchar(100) not null,
+  primary key ("user_id"),
+  foreign key ("user_id") references "users" ("id") on delete cascade,
+  unique ("email")
+);
+
+CREATE TABLE IF NOT EXISTS "user_details" (
+  "user_id" uuid not null,
+  "email" varchar(255) not null,
+  "password" varchar(100) not null,
+  PRIMARY KEY ("user_id"),
+  FOREIGN KEY ("user_id") REFERENCES "users" ("id") on delete cascade,
+  unique ("email")
 );

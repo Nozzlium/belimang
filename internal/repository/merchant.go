@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -102,7 +101,6 @@ func (r *MerchantRepository) FindAll(
 		merchantQueries.BuildWhereClauses,
 		nil,
 	)
-	fmt.Println(queryTotalString)
 
 	batch := &pgx.Batch{}
 	batch.Queue(queries, params...)

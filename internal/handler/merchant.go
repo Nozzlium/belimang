@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/nozzlium/belimang/internal/constant"
@@ -43,7 +42,6 @@ func (h *MerchantHandler) Create(
 	}
 
 	merchantModel, err := body.IsValid()
-	log.Println(body, merchantModel)
 	if err != nil {
 		return HandleError(
 			ctx,

@@ -34,34 +34,34 @@ func (r *UserRepository) CreateAdmin(
 
 	queryInsertUser := `
     insert into
-    admins (
+    users (
       id,
-      email, 
-      password
-    ) values (
-      $1, $2, $3
-    );
-  `
-	batch.Queue(
-		queryInsertUser,
-		user.ID,
-		user.Email,
-		user.Password,
-	)
-
-	queryInsertUsername := `
-    insert into
-    admin_usernames (
-      admin_id,
       username
     ) values (
       $1, $2
     );
   `
 	batch.Queue(
-		queryInsertUsername,
+		queryInsertUser,
 		user.ID,
 		user.Username,
+	)
+
+	queryInsertUsername := `
+    insert into
+    admin_details (
+      user_id,
+      email,
+      password
+    ) values (
+      $1, $2, $3
+    );
+  `
+	batch.Queue(
+		queryInsertUsername,
+		user.ID,
+		user.Email,
+		user.Password,
 	)
 
 	batchRes := tx.SendBatch(ctx, batch)
@@ -98,32 +98,32 @@ func (r *UserRepository) CreateUser(
     insert into
     users (
       id,
-      email, 
-      password
-    ) values (
-      $1, $2, $3
-    );
-  `
-	batch.Queue(
-		queryInsertUser,
-		user.ID,
-		user.Email,
-		user.Password,
-	)
-
-	queryInsertUsername := `
-    insert into
-    user_usernames (
-      user_id,
       username
     ) values (
       $1, $2
     );
   `
 	batch.Queue(
-		queryInsertUsername,
+		queryInsertUser,
 		user.ID,
 		user.Username,
+	)
+
+	queryInsertUsername := `
+    insert into
+    user_details (
+      user_id,
+      email,
+      password
+    ) values (
+      $1, $2, $3
+    );
+  `
+	batch.Queue(
+		queryInsertUsername,
+		user.ID,
+		user.Email,
+		user.Password,
 	)
 
 	batchRes := tx.SendBatch(ctx, batch)
@@ -150,13 +150,13 @@ func (r *UserRepository) FindAdminByUsername(
 ) (model.User, error) {
 	queryFindUser := `
     select
-      a.id,
+      u.id,
       u.username,
-      a.email,
-      a.password
+      ad.email,
+      ad.password
     from 
-      admins a 
-      inner join admin_usernames u on u.admin_id = a.id 
+      users u 
+      inner join admin_details ad on u.id = ad.user_id 
     where u.username = $1
   `
 
@@ -185,13 +185,13 @@ func (r *UserRepository) FindUserByUsername(
 	queryFindUser := `
     select
       u.id,
-      un.username,
-      u.email,
-      u.password
+      u.username,
+      ud.email,
+      ud.password
     from 
       users u 
-      inner join user_usernames un on un.user_id = u.id 
-    where un.username = $1
+      inner join user_details ud on u.id = ud.user_id 
+    where u.username = $1
   `
 
 	err := r.db.QueryRow(
@@ -210,54 +210,4 @@ func (r *UserRepository) FindUserByUsername(
 	}
 
 	return user, nil
-}
-
-func (r *UserRepository) FindAdminUsername(
-	ctx context.Context,
-	username string,
-) (string, error) {
-	query := `
-    select username
-    from admin_usernames
-    where username = $1
-  `
-	var savedUsername string
-	err := r.db.QueryRow(ctx, query, username).
-		Scan(&savedUsername)
-	if err != nil {
-		if errors.Is(
-			err,
-			pgx.ErrNoRows,
-		) {
-			return "", constant.ErrNotFound
-		}
-		return "", err
-	}
-
-	return savedUsername, nil
-}
-
-func (r *UserRepository) FindUserUsername(
-	ctx context.Context,
-	username string,
-) (string, error) {
-	query := `
-    select username
-    from user_usernames
-    where username = $1
-  `
-	var savedUsername string
-	err := r.db.QueryRow(ctx, query, username).
-		Scan(&savedUsername)
-	if err != nil {
-		if errors.Is(
-			err,
-			pgx.ErrNoRows,
-		) {
-			return "", constant.ErrNotFound
-		}
-		return "", err
-	}
-
-	return savedUsername, nil
 }

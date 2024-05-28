@@ -54,6 +54,9 @@ func setupApp(app *fiber.App) error {
 	merchantRepository := repository.NewMerchantRepository(
 		db,
 	)
+	productRepository := repository.NewProductRepository(
+		db,
+	)
 
 	userService := service.NewUserService(
 		userRepository,
@@ -63,12 +66,18 @@ func setupApp(app *fiber.App) error {
 	merchantService := service.NewMerchantService(
 		merchantRepository,
 	)
+	productService := service.NewProductService(
+		productRepository,
+	)
 
 	userHandler := handler.NewUserHandler(
 		userService,
 	)
 	merchantHandler := handler.NewMerchantHandler(
 		merchantService,
+	)
+	productHandler := handler.NewProductHandler(
+		productService,
 	)
 
 	admin := app.Group("/admin")
@@ -90,6 +99,10 @@ func setupApp(app *fiber.App) error {
 	adminProtected.Get(
 		"/merchants",
 		merchantHandler.FindAll,
+	)
+	adminProtected.Post(
+		"/merchants/:merchantId/items",
+		productHandler.Create,
 	)
 
 	user := app.Group("/user")
