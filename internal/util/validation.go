@@ -22,3 +22,19 @@ func ValidateEmailAddress(
 
 	return nil
 }
+
+func ValidateURL(url string) error {
+	regex := `^[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)$`
+	urlRegex, err := regexp.Compile(
+		regex,
+	)
+	if err != nil {
+		return err
+	}
+
+	if !urlRegex.MatchString(url) {
+		return constant.ErrBadInput
+	}
+
+	return nil
+}

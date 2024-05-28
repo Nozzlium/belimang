@@ -9,6 +9,7 @@ import (
 	"github.com/nozzlium/belimang/internal/client"
 	"github.com/nozzlium/belimang/internal/config"
 	"github.com/nozzlium/belimang/internal/handler"
+	"github.com/nozzlium/belimang/internal/middleware"
 	"github.com/nozzlium/belimang/internal/repository"
 	"github.com/nozzlium/belimang/internal/service"
 )
@@ -50,15 +51,24 @@ func setupApp(app *fiber.App) error {
 	userRepository := repository.NewUserRepository(
 		db,
 	)
+	merchantRepository := repository.NewMerchantRepository(
+		db,
+	)
 
 	userService := service.NewUserService(
 		userRepository,
 		cfg.JWTSecret,
 		int(cfg.BCryptSalt),
 	)
+	merchantService := service.NewMerchantService(
+		merchantRepository,
+	)
 
 	userHandler := handler.NewUserHandler(
 		userService,
+	)
+	merchantHandler := handler.NewMerchantHandler(
+		merchantService,
 	)
 
 	admin := app.Group("/admin")
@@ -69,6 +79,17 @@ func setupApp(app *fiber.App) error {
 	admin.Post(
 		"/login",
 		userHandler.LoginAdmin,
+	)
+	adminProtected := admin.Use(
+		middleware.Protected(),
+	).Use(middleware.SetClaimsData())
+	adminProtected.Post(
+		"/merchants",
+		merchantHandler.Create,
+	)
+	adminProtected.Get(
+		"/merchants",
+		merchantHandler.FindAll,
 	)
 
 	user := app.Group("/user")
