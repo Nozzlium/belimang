@@ -102,3 +102,63 @@ func (h *ProductHandler) Create(
 			"itemId": productId.String(),
 		})
 }
+
+func (h *ProductHandler) FindAll(
+	ctx *fiber.Ctx,
+) error {
+	var queries model.ProductQueries
+	ctx.QueryParser(&queries)
+	queries.Limit = ctx.QueryInt(
+		"limit",
+		5,
+	)
+	queries.Offset = ctx.QueryInt(
+		"offset",
+		0,
+	)
+	queries.CreatedAt = ctx.Query(
+		"createdAt",
+		"desc",
+	)
+
+	merchantIdString := ctx.Params(
+		"merchantId",
+	)
+	merchantId, err := uuid.Parse(
+		merchantIdString,
+	)
+	if err != nil {
+		return HandleError(
+			ctx,
+			ErrorResponse{
+				error:   err,
+				message: err.Error(),
+				detail: fmt.Sprintf(
+					"[find products] failed to find parse merchant id: %v",
+					err,
+				),
+			},
+		)
+	}
+	queries.MerchantId = merchantId
+
+	productResp, err := h.productService.FindAll(
+		ctx.Context(),
+		queries,
+	)
+	if err != nil {
+		return HandleError(
+			ctx,
+			ErrorResponse{
+				error:   err,
+				message: err.Error(),
+				detail: fmt.Sprintf(
+					"[find products] failed to find products: %v",
+					err,
+				),
+			},
+		)
+	}
+
+	return ctx.JSON(productResp)
+}

@@ -53,3 +53,39 @@ func (s *ProductService) Create(
 
 	return productId, nil
 }
+
+func (s *ProductService) FindAll(
+	ctx context.Context,
+	queries model.ProductQueries,
+) (model.ProductItemsResponseBody, error) {
+	products, total, err := s.productRepository.FindAll(
+		ctx,
+		queries,
+	)
+	if err != nil {
+		return model.ProductItemsResponseBody{}, err
+	}
+
+	productData := make(
+		[]model.ProductData,
+		0,
+		len(products),
+	)
+	for _, product := range products {
+		productData = append(
+			productData,
+			product.ToProductData(),
+		)
+	}
+
+	productResponse := model.ProductItemsResponseBody{
+		Data: productData,
+		Meta: model.ProductMeta{
+			Limit:  queries.Limit,
+			Offset: queries.Offset,
+			Total:  total,
+		},
+	}
+
+	return productResponse, nil
+}

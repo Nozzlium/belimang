@@ -109,6 +109,7 @@ func (r *MerchantRepository) FindAll(
 		paramsTotal...)
 
 	br := r.db.SendBatch(ctx, batch)
+	defer br.Close()
 
 	rows, err := br.Query()
 	if err != nil {
@@ -153,7 +154,6 @@ func (r *MerchantRepository) FindAll(
 			return nil, 0, err
 		}
 	}
-	defer br.Close()
 
 	return merchants, total, nil
 }

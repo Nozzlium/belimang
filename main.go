@@ -104,6 +104,10 @@ func setupApp(app *fiber.App) error {
 		"/merchants/:merchantId/items",
 		productHandler.Create,
 	)
+	adminProtected.Get(
+		"/merchants/:merchantId/items",
+		productHandler.FindAll,
+	)
 
 	user := app.Group("/user")
 	user.Post(
